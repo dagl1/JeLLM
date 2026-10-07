@@ -1,0 +1,32 @@
+import { Button, VerticalBox } from "std-widgets.slint";
+
+export component AppWindow inherits Window {
+    title: "Color Changer";
+    width: 300px;
+    height: 200px;
+    
+    // 1. Expose a property to govern the background color
+    in-out property <color> current-bg: #f0f0f0;
+    background: root.current-bg;
+
+    // 2. Declare a callback hook for the click event
+    callback request-color-change();
+
+    VerticalBox {
+        alignment: center;
+        spacing: 20px;
+
+        Text {
+            text: "Click below to change the screen color!";
+            horizontal-alignment: center;
+        }
+
+        Button {
+            text: "Change Color";
+            // 3. Fire the callback when clicked
+            clicked => {
+                root.request-color-change();
+            }
+        }
+    }
+}
