@@ -1,0 +1,4 @@
+
+# rustfmt.toml
+max_width = 94
+edition = "2024"
