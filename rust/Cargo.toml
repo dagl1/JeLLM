@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+eframe = "0.37.0"
 markdown-rs = "0.1.0"
 petgraph = "0.8.3"
 pulldown-cmark = "0.13.4"
