@@ -8,8 +8,6 @@ eframe = "0.37.0"
 markdown-rs = "0.1.0"
 petgraph = "0.8.3"
 pulldown-cmark = "0.13.4"
-slint = "1.18.1"
-tokio = "1.53.2"
 
 [lints.clippy]
 pedantic = { level = "deny", priority = -1 }

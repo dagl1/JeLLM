@@ -107,7 +107,7 @@ fn list_all_directories(path: &Path) -> Option<Vec<PathBuf>> {
 
 fn filter_ignored_dirs(
     dir_list: Vec<PathBuf>,
-    ignored_dirs: &Vec<PathBuf>,
+    ignored_dirs: &[PathBuf],
 ) -> Option<Vec<PathBuf>> {
     let ignored_set: HashSet<&PathBuf> = ignored_dirs.iter().collect();
 
@@ -210,87 +210,87 @@ fn index_markdown_files(
     (final_list, final_map)
 }
 
-fn index_markdown_files_with_update(
-    entries: Vec<PathBuf>,
-) -> (Option<HashSet<PathBuf>>, Option<HashMap<String, PathBuf>>) {
-    let mut set_of_markdown_files: HashSet<PathBuf> = HashSet::new();
-    let mut file_to_location_map: HashMap<String, PathBuf> = HashMap::new();
-    fn return_unique_name(entry: PathBuf, set: &HashSet<PathBuf>) {
-        let file_stem = match path.file_stem().and_then(|s| s.to_str()) {
-            Some(stem) => stem,
-            None => return, // Skip files without valid stems
-        };
-
-        let mut modifier_components: Vec<String> = Vec::new();
-        let mut current_ancestor = path.parent();
-
-        loop {
-            // Construct the key candidate: "file_stem" + "_parent1" + "_parent2" etc.
-            let mut key = file_stem.to_string();
-            for component in modifier_components.iter().rev() {
-                key.push('_');
-                key.push_str(component);
-            }
-
-            // If the key doesn't exist, or if it points to the exact same path, we can safely insert it
-            if !map.contains_key(&key) || map.get(&key) == Some(&path) {
-                map.insert(key, path);
-                break;
-            }
-
-            // If key exists, grab the next parent directory to differentiate it
-            if let Some(parent) = current_ancestor {
-                if let Some(parent_name) = parent.file_name().and_then(|n| n.to_str()) {
-                    modifier_components.push(parent_name.to_string());
-                    current_ancestor = parent.parent();
-                } else {
-                    // No more readable parent directory names left; append a fallback to prevent infinite loop
-                    modifier_components.push("duplicate".to_string());
-                }
-            } else {
-                modifier_components.push("duplicate".to_string());
-            }
-        }
-    }
-    fn process_entries(
-        entries: Vec<PathBuf>,
-        set: &mut HashSet<PathBuf>,
-        map: &mut HashMap<String, PathBuf>,
-    ) {
-        for entry in entries {
-            if entry.is_dir() {
-                // Read the directory and recursively process its children
-                if let Ok(reader) = std::fs::read_dir(&entry) {
-                    let sub_entries: Vec<PathBuf> = reader
-                        .filter_map(|res| res.ok())
-                        .map(|dir_entry| dir_entry.path())
-                        .collect();
-                    process_entries(sub_entries, set, map);
-                }
-            } else if entry.is_file() {
-                // Check if the file extension is markdown
-                if let Some(ext) = entry.extension() {
-                    if ext == "md" || ext == "markdown" {
-                        insert_with_disambiguation(entry, map);
-                    }
-                }
-            }
-        }
-    }
-    process_entries(
-        entries,
-        &mut list_of_markdown_files,
-        &mut file_to_location_map,
-    );
-    let final_list = if list_of_markdown_files.is_empty() {
-        None
-    } else {
-        Some(list_of_markdown_files)
-    };
-    let final_map = if file_to_location_map.is_empty() {
-        None
-    } else {
-        Some(file_to_location_map)
-    };
-    (final_list, final_map)
-}
+// fn index_markdown_files_with_update(
+//     entries: Vec<PathBuf>,
+// ) -> (Option<HashSet<PathBuf>>, Option<HashMap<String, PathBuf>>) {
+//     let mut set_of_markdown_files: HashSet<PathBuf> = HashSet::new();
+//     let mut file_to_location_map: HashMap<String, PathBuf> = HashMap::new();
+//     fn return_unique_name(entry: PathBuf, set: &HashSet<PathBuf>) {
+//         let file_stem = match path.file_stem().and_then(|s| s.to_str()) {
+//             Some(stem) => stem,
+//             None => return, // Skip files without valid stems
+//         };
+//
+//         let mut modifier_components: Vec<String> = Vec::new();
+//         let mut current_ancestor = path.parent();
+//
+//         loop {
+//             // Construct the key candidate: "file_stem" + "_parent1" + "_parent2" etc.
+//             let mut key = file_stem.to_string();
+//             for component in modifier_components.iter().rev() {
+//                 key.push('_');
+//                 key.push_str(component);
+//             }
+//
+//             // If the key doesn't exist, or if it points to the exact same path, we can safely insert it
+//             if !map.contains_key(&key) || map.get(&key) == Some(&path) {
+//                 map.insert(key, path);
+//                 break;
+//             }
+//
+//             // If key exists, grab the next parent directory to differentiate it
+//             if let Some(parent) = current_ancestor {
+//                 if let Some(parent_name) = parent.file_name().and_then(|n| n.to_str()) {
+//                     modifier_components.push(parent_name.to_string());
+//                     current_ancestor = parent.parent();
+//                 } else {
+//                     // No more readable parent directory names left; append a fallback to prevent infinite loop
+//                     modifier_components.push("duplicate".to_string());
+//                 }
+//             } else {
+//                 modifier_components.push("duplicate".to_string());
+//             }
+//         }
+//     }
+//     fn process_entries(
+//         entries: Vec<PathBuf>,
+//         set: &mut HashSet<PathBuf>,
+//         map: &mut HashMap<String, PathBuf>,
+//     ) {
+//         for entry in entries {
+//             if entry.is_dir() {
+//                 // Read the directory and recursively process its children
+//                 if let Ok(reader) = std::fs::read_dir(&entry) {
+//                     let sub_entries: Vec<PathBuf> = reader
+//                         .filter_map(|res| res.ok())
+//                         .map(|dir_entry| dir_entry.path())
+//                         .collect();
+//                     process_entries(sub_entries, set, map);
+//                 }
+//             } else if entry.is_file() {
+//                 // Check if the file extension is markdown
+//                 if let Some(ext) = entry.extension() {
+//                     if ext == "md" || ext == "markdown" {
+//                         insert_with_disambiguation(entry, map);
+//                     }
+//                 }
+//             }
+//         }
+//     }
+//     process_entries(
+//         entries,
+//         &mut list_of_markdown_files,
+//         &mut file_to_location_map,
+//     );
+//     let final_list = if list_of_markdown_files.is_empty() {
+//         None
+//     } else {
+//         Some(list_of_markdown_files)
+//     };
+//     let final_map = if file_to_location_map.is_empty() {
+//         None
+//     } else {
+//         Some(file_to_location_map)
+//     };
+//     (final_list, final_map)
+// }
