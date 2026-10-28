@@ -4,6 +4,7 @@ use std::collections::{HashMap, HashSet};
 use std::convert::AsRef;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, RwLock};
 
 mod markdown;
 mod user;
@@ -70,6 +71,23 @@ impl ValidVaultDir {
 impl AsRef<Path> for ValidVaultDir {
     fn as_ref(&self) -> &Path {
         &self.path
+    }
+}
+pub type SharedNode = Arc<RwLock<AdjacencyNode>>;
+
+struct AdjacencyNode {
+    pub name: String,
+    pub parents: HashMap<String, Vec<SharedNode>>,
+    pub children: HashMap<String, Vec<SharedNode>>,
+}
+
+impl AdjacencyNode {
+    pub fn new(name: &str) -> SharedNode {
+        Arc::new(RwLock::new(Self {
+            name: name.to_string(),
+            parents: HashMap::new(),
+            children: HashMap::new(),
+        }))
     }
 }
 
